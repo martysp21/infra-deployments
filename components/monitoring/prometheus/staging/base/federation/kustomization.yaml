@@ -23,6 +23,10 @@ patches:
     target:
       name: appstudio-federate-uwm-smon
       kind: ServiceMonitor
+  - path: uwm-exclude-pipelinerun-info.yaml
+    target:
+      name: appstudio-federate-uwm-smon
+      kind: ServiceMonitor
   - path: remote-write-env-details.yaml
     target:
       name: appstudio-federate-ms

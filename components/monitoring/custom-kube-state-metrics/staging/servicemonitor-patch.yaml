@@ -1,0 +1,11 @@
+---
+# Coalesce test-PipelineRun SHA onto commit_sha, then drop the helper label.
+- op: add
+  path: /spec/endpoints/0/metricRelabelings
+  value:
+    - sourceLabels: [pac_test_commit_sha]
+      regex: .+
+      targetLabel: commit_sha
+      action: replace
+    - regex: pac_test_commit_sha
+      action: labeldrop

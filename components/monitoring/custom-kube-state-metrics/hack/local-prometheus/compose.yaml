@@ -1,0 +1,31 @@
+services:
+  ksm:
+    image: registry.k8s.io/kube-state-metrics/kube-state-metrics:v2.19.1
+    container_name: ksm
+    command:
+      - --kubeconfig=/kubeconfig
+      - --custom-resource-state-config-file=/etc/config/custom-resource-state.yaml
+      - --custom-resource-state-only=true
+    environment:
+      # client-go WatchList hangs on OpenShift CRD watches from a remote laptop
+      - KUBE_FEATURE_WatchListClient=false
+    volumes:
+      - ./kubeconfig:/kubeconfig:ro
+      - ./custom-resource-state.yaml:/etc/config/custom-resource-state.yaml:ro
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+  prometheus:
+    image: docker.io/prom/prometheus:v2.54.1
+    container_name: ksm-prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=6h
+      - --web.enable-lifecycle
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - ksm

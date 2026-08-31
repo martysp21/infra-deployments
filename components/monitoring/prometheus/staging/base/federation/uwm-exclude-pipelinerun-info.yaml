@@ -1,0 +1,15 @@
+---
+# Keep kube_customresource_konflux_pipelinerun_info on UWM only. It is one
+# series per live PipelineRun (name + commit SHA) and must not be federated
+# to OBO / remote-written to RHOBS.
+- op: replace
+  path: /spec/endpoints/0/params
+  value:
+    'match[]':
+      - '{__name__=~".+",__name__!="kube_customresource_konflux_pipelinerun_info"}'
+- op: add
+  path: /spec/endpoints/0/metricRelabelings/-
+  value:
+    sourceLabels: [__name__]
+    regex: kube_customresource_konflux_pipelinerun_info
+    action: drop

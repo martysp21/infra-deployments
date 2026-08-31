@@ -1,0 +1,15 @@
+global:
+  scrape_interval: 30s
+  evaluation_interval: 30s
+
+scrape_configs:
+  - job_name: ksm
+    static_configs:
+      - targets: ["ksm:8080"]
+    metric_relabel_configs:
+      - source_labels: [pac_test_commit_sha]
+        regex: .+
+        target_label: commit_sha
+        action: replace
+      - regex: pac_test_commit_sha
+        action: labeldrop

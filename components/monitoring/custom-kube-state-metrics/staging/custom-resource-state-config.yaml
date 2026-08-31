@@ -54,24 +54,44 @@ data:
                   nilIsZero: true
 
         ###############################################################################
-        # Hanging PipelineRun detection — tracks PipelineRuns stuck on finalizers
-        # after the Tekton pruner requested deletion.
+        # PipelineRuns — one GVK only (KSM cannot register the same GVK twice).
+        # Resource-level labels are inherited by every metric below; keep that set
+        # small. High-cardinality identity labels belong on konflux_pipelinerun_info
+        # only so the hanging-PR metric is unchanged for RHOBS federation.
         ###############################################################################
         - groupVersionKind:
             group: "tekton.dev"
             version: "v1"
             kind: "PipelineRun"
           labelsFromPath:
-            pipelinerun: [metadata, name]
             namespace: [metadata, namespace]
-            pipeline: [metadata, labels, tekton.dev/pipeline]
-            finalizers: [metadata, finalizers]
           metrics:
             - name: "konflux_pipelinerun_deletion_timestamp_seconds"
               help: "Unix timestamp when deletion was requested (0 = not deleted). Use > 0 to find stuck PipelineRuns."
+              labelsFromPath:
+                pipelinerun: [metadata, name]
+                pipeline: [metadata, labels, tekton.dev/pipeline]
+                finalizers: [metadata, finalizers]
               each:
                 type: Gauge
                 gauge:
                   path: [metadata, deletionTimestamp]
                   nilIsZero: true
-
+            # High cardinality (one series per live PipelineRun). Scraped by UWM
+            # for on-cluster queries; excluded from OBO federation / RHOBS.
+            # Test PipelineRuns use pac.test.appstudio.openshift.io/sha; the
+            # ServiceMonitor copies a non-empty pac_test_commit_sha onto commit_sha.
+            - name: "konflux_pipelinerun_info"
+              help: "Konflux PipelineRun identity. Value is metadata.generation."
+              labelsFromPath:
+                pipelinerun: [metadata, name]
+                application: [metadata, labels, appstudio.openshift.io/application]
+                component: [metadata, labels, appstudio.openshift.io/component]
+                pipeline_type: [metadata, labels, pipelines.appstudio.openshift.io/type]
+                commit_sha: [metadata, labels, pipelinesascode.tekton.dev/sha]
+                pac_test_commit_sha: [metadata, labels, pac.test.appstudio.openshift.io/sha]
+              each:
+                type: Gauge
+                gauge:
+                  path: [metadata, generation]
+                  nilIsZero: true

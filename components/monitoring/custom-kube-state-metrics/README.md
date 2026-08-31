@@ -55,6 +55,18 @@ Add a rule to the ClusterRole in `base/rbac.yaml` for the new API group:
 kustomize build components/monitoring/custom-kube-state-metrics/base
 ```
 
+#### Local Podman + Prometheus (staging or prod listen)
+
+To scrape the staging ConfigMap with a local Prometheus against a live cluster
+(read-only `list`/`watch`, including **stone-prod-p02**), see
+[hack/local-prometheus/README.md](hack/local-prometheus/README.md).
+
+```bash
+oc login --token=<token> --server=https://api.stone-prod-p02.hjvn.p1.openshiftapps.com:6443
+components/monitoring/custom-kube-state-metrics/hack/local-prometheus/start.sh
+# Prometheus: http://localhost:9090
+```
+
 #### Local Docker test — staging only
 
 Test that your metric actually produces data by running kube-state-metrics locally
